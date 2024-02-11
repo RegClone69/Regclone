@@ -1,10 +1,9 @@
 ---
-title: "Proposal: [Your project name]"
+title: "Los Angeles Crime Trends from 2020 to 2024"
 subtitle: "DATA 450 Capstone"
-author: "[Your Name]"
-date: today
+author: "Nikita Gerzhgorin"
+date: 02/09/2024
 date-format: long
-bibliography: references.bib
 number-sections: true
 format:
   pdf: default
@@ -13,94 +12,122 @@ jupyter: python3
 
 # Introduction
 
-[This section should contain background and introduction to your general topic.]
+Knowing the dynamics of urban safety and security requires an analysis of crime trends. One of the most populated and culturally diverse cities in the country, Los Angeles, has long struggled with different ranges of criminal activities. This project aims to delve into the crime trends of the city of Los Angeles from 2020 to 2024 for better understanding the city's security concerns and closely examining the growth of crime in the city over time. 
+
 
 # Dataset
 
-[In this section, desribe the dataset(s). This includes things like where you
-obtained the dataset. Include a full citation, as specified 
-[here](https://guides.lib.umich.edu/c.php?g=282964&p=3285995). Describe how the
-data was obtained by the data owner/curator, as best as you can. List the 
-variables that you plan to use in your analysis, for example:
+The dataset "Crime Data from 2020 to Present" was obtained from the [Los Angeles Open Data Website](https://data.lacity.org/Public-Safety/Crime-Data-from-2020-to-Present/2nrs-mtv8/about_data). Provided by the Los Angeles Police Department, it has over 890,000 rows of crime incidents that were reported in the city from 2020 till the present time. It is prepared by transcribing the crime reports typed on paper into a dataset format and is continuously being updated every two weeks by the city's police department. 
 
-* weight: The patient's weight (kg)
-* sex: The patient's sex, male or female
-* age: The patient's age (months)
+The columns in the dataset that I plan to use are:
 
-]
+* Date Rptd: Date when the incident was reported 
+* DATE OCC: Date when the incident occurred
+* TIME OCC: Time of occurrence
+* AREA NAME: Name designation of the LAPD Geographic Area
+* Crm Cd:  The code that indicates the type of crime commited
+* Crm Cd Desc: The definition of the Crime Code provided
+* Vict Age: Age of the victim
+* Vict Sex: Gender of the victim
+* Victim Descent: Ethnicity of the victim
+* Premise Cd: The code representing the type of location where the crime occurred
+* Premise Desc: The definition of the Premise Code provided
+* Weapon Used Cd: The code representing the type of weapon used in the crime
+* Weapon Desc: The definition of the Weapon Used Code provided
+* Status: Status of the case
+* Latitude: Latitude coordinate of the crime location
+* Longitude: Longitude coordinate of the crime location
+
 
 # Data Acquisition and Processing
 
-[In this section, if applicable, describe how you will obtain the data (if it's
-anything more complicated than a simple download). Discuss what data 
-processing steps will be needed, such as recoding variables, data cleaning,
-data tidying, imputing missing values, etc. See sections 1c, 1d, 1e in the 
-"Good Enough Practices" paper.]
+Some of the columns like Victim's Descent are in a character format will be mapped to their actual values 
+using the crime report pdf provided in the website. The date and time of occurences will be combined into a single
+date time object and the date reported will be converted to a date object before analyzing the data. For the machine learning part, the categorial columns like victim's age and sex will be encoded into numbers and 
+the description columns that have codes already associated with them will be dropped.
 
 # Research Questions and Methodology
 
-[In this section, list each of the questions you will explore. Following each
-question, provide a detailed and specific plan for how you plan to answer the 
-question. Include the specific steps you will take, what form the answer will 
-take (a number? table? visualization? model? Give all the specifics), and 
-estimate how many hours each question will take to complete.]
 
-1. Is smoking correlated with diabetes? To answer this, I will create a filled
-bar plot, with the left bar representing non-smokers, the middle bar
-representing people who smoke moderately, and the right bar representing heavy
-smokers. The bars will be the same height, and each bar will be
-colored two colors based on the proportion of patients in the group who do or
-do not have diabetes.
+1. How is the trend in criminal incidents in the city? A time series plot by month for each year will 
+be plotted in a single line plot. 
 
-2. Question 2? Plan for question 2.
+2. What is the distribution of crime based on geographical area within the city? A choropleth map will be plotted
+to visualize the distribution of crimes using the latitude and longitude columns for different areas of the city.
 
-3. Question 3? Plan for question 3.
+3. What is the demographic of the victims? A histogram will be plotted showing the distribution of victim age and 
+two bar charts will be plotted for gender and ethnicity.
 
-4. etc.
+4. What kind of weapons are mostly used in the crimes? A bar chart displaying the frequency of different 
+types of weapons used in crimes will be plotted.
+
+5. What are the statuses of the crimes reported? A pie chart that shows the distribution of different statuses
+of the crimes will be plotted.
+
+6. How has the frequency of crimes for different gender groups changed over time in different geographical area? A heatmap with a time slider will be plotted to show the change in frequency of crime reportings for different gender groups.
+
+7. Are certain police regions more good in solving crimes? A stacked bar chart showing the resolved and unresolved
+crimes will be shown for the top 10 police geographical regions with the highest number of crime reportings.
+
+8. What are the most common premise-related words? A word cloud showing the most common words in the premise description will be plotted.
+
+9. Can the age of the victim be predicted based on the types of crime incidents and geographical regions?
+Three common machine learning algorithms (Linear Regression, Decision Trees, and Random Forest) will be used to identify the accuracies with the age of the victim can be predicted. A bar chart will be plotted showing the time and the accuracy of each machine learning algorithm.
 
 # Work plan
 
-[Fill in the list below with a plan for what you will do each week, starting 2/12. You should
-have around 7 hours worth of work each week. Writing work counts. Several tasks
-have already been filled in for you.]
+**Week 4 (2/12 - 2/18):**
 
-**Week 4 (2/12 - 2/18):** [Just an example: 
-
-* Data tidying and recoding (4 hours)
-* Question 2 (4 hours).]
+* Preprocessing (3.5 hours).
+* Question 1 (3.5 hours).
 
 **Week 5 (2/19 - 2/25):**
 
+* Question 2 (3.5 hours).
+* Question 3 (3.5 hours).
+
+
 **Week 6 (2/26 - 3/3):**
+
+* Question 4 (3.5 hours).
+* Question 5 (3.5 hours).
 
 **Week 7 (3/4 - 3/10):**
 
 * Presentation prep and practice (4 hours)
+* Question 6 (3.5 hours).
 
-**Week 8 (3/11 - 3/17):** *Presentations given on Wed-Thu 3/13-3/14. Poster Draft due Friday 3/15 (optional extension till 3/17).*
+
+**Week 8 (3/11 - 3/17):** 
 
 * Poster prep (4 hours)
 * Presentation peer review (1.5 hours)
+* Question 7 (1.5 hours).
 
 **Week 9 (3/25 - 3/31):** *Final Poster due Sunday 3/31*.
 
 * Peer feedback (3.5 hours)
-
 * Poster revisions (3.5 hours)
-
-* [Do not schedule any other tasks for this week.]
 
 **Week 10 (4/1 - 4/7):** 
 
+* Question 7 (1.5 hours).
+* Question 8 (4.5 hours).
+
 **Week 11 (4/8 - 4/14):**
+
+* Question 9 (7 hours).
 
 **Week 12 (4/15 - 4/21):**
 
+* Revision of Question 1 - 8 (5 hours).
+* Revision of Question 9 (2 hours).
+
 **Week 13 (4/22 - 4/28):** *Blog post draft 1 due Sunday night 4/28.*
-[All project work should be done by the end of this 
-week. The remaining time will be used for writing up and presenting your results.]
 
 * Draft blog post (4 hours).
+* Revision of Question 9 (3 hours).
+
 
 **Week 14 (4/29 - 5/5):**
 
@@ -114,39 +141,6 @@ week. The remaining time will be used for writing up and presenting your results
 * Peer feedback (2 hours)
 * [Do not schedule any other tasks for this week.]
 
-## Some cool Quarto stuff
-
-[You can delete this section from your proposal.]
-
-For your reference, here's an example of a Python code cell in Quarto,
-along with a figure that gets generated, along with a caption and a label
-so that it can be referred to automatically as "Figure 1" (or whatever)
-in the writeup.
-
-For a demonstration of a line plot on a polar axis, see @fig-polar.
-
-```{python}
-#| label: fig-polar
-#| fig-cap: "A line plot on a polar axis"
-
-import numpy as np
-import matplotlib.pyplot as plt
-
-r = np.arange(0, 2, 0.01)
-theta = 2 * np.pi * r
-fig, ax = plt.subplots(
-  subplot_kw = {'projection': 'polar'} 
-)
-ax.plot(theta, r)
-ax.set_rticks([0.5, 1, 1.5, 2])
-ax.grid(True)
-plt.show()
-```
-
-Here's an example of citing a source [see @phil99, pp. 33-35]. Be sure the source information is entered in "BibTeX" form in the `references.bib` file.
-
 # References
 
-[The bibliography will automatically get generated. Any sources you
-cite in the document will be included. Other entries in the `.bib` file
-will not be included.]
+Los Angeles Crime Data from 2020 to Present: https://data.lacity.org/Public-Safety/Crime-Data-from-2020-to-Present/2nrs-mtv8/about_data
