@@ -1,69 +1,301 @@
 ---
-title: "My awesome blog"
-subtitle: "Spring 2023"
-author: "Prof. Yuster"
-bibliography: references.bib
+title: "Los Angeles Crime Trends from 2020 to 2024"
+subtitle: "Analyzing Patterns and Insights Over Five Years"
+author: "Nikita Gerzhgorin"
 number-sections: false
 format:
   html:
-    theme: default
+    toc: true
     rendering: embed-resources
     code-fold: true
     code-tools: true
-    toc: true
   pdf: default
 jupyter: python3
 ---
 
+![](./crime.webp){width=100%}
 
-![Source: Ramapo College of New Jersey](https://www.ramapo.edu/tours/wp-content/uploads/sites/344/2020/10/Fall-Arch-Straigh-Edit.jpg){fig-alt="A photo of the arch at Ramapo College."}
+This project will delve into the crime reports spanning from 2020 to 2024 to grasp a clearer understanding of the safety dynamics in Los Angeles. As one of the largest and most culturally diverse cities in the country, Los Angeles has been grappling with a spectrum of criminal activities over the years. By delving into these crime reports, we aim to uncover trends and patterns that have emerged during this period. This analysis will shed light on which types of crimes are on the rise, where they are occurring most frequently, and whether there are any notable shifts in the city's crime landscape over the years.
 
+The dataset used in this project "Crime Data from 2020 to Present" is obtained from the [Los Angeles Open Data Website](https://data.lacity.org/Public-Safety/Crime-Data-from-2020-to-Present/2nrs-mtv8/about_data). Provided by the Los Angeles Police Department, it has over 890,000 rows of crime incidents that were reported in the city from 2020 till the present time. It is prepared by transcribing the crime reports typed on paper into a dataset format and is continuously being updated every two weeks by the city's police department.
 
-# Welcome
+Through a detailed analysis of crime reports, we seek to discern the underlying factors contributing to the city's security concerns. Los Angeles's urban environment is characterized by a mix of socioeconomic factors, demographic shifts, and community dynamics, all of which can influence crime rates. By identifying correlations between crime data and various social indicators, we hope to expand the understanding of the the nature of crime in different neighborhoods and communities across the city.
 
+## Analysis 
 
-**Welcome** to *my* ~~super~~ SUPER awesome `blog` post!
-$$x^2 = 1$$
-
-## Quarto is cool
-
-This section was copy/pasted from various parts of the [Quarto website](https://quarto.org/docs/get-started/hello/vscode.html).
-
-:::{.callout-note}
-Note that there are five types of callouts, including:
-`note`, `tip`, `warning`, `caution`, and `important`.
-:::
-
-:::{.callout-tip}
-## Tip With Caption
-
-This is an example of a callout with a caption.
-:::
-
-
-For your reference, here's an example of a Python code cell in Quarto, along with a figure that gets generated, along with a caption and a label so that it can be referred to automatically as "Figure 1" (or whatever) in the writeup.
-
-For a demonstration of a line plot on a polar axis, see @fig-polar.
-
-```{python}
-#| label: fig-polar
-#| fig-cap: "A line plot on a polar axis"
-
+```{python echo=FALSE}
+#| label: fig-1
+#| fig-cap: "Trend in Crime Occurrences"
+import pandas as pd
 import numpy as np
+import seaborn as sns
 import matplotlib.pyplot as plt
+import plotly.graph_objs as go
+import plotly.express as px
+import math
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import r2_score
+import warnings
+warnings.filterwarnings("ignore")
 
-r = np.arange(0, 2, 0.01)
-theta = 2 * np.pi * r
-fig, ax = plt.subplots(
-  subplot_kw = {'projection': 'polar'} 
+
+
+
+df = pd.read_csv("crime_data.csv")
+
+rename = {
+    "DR_NO": "Report No.",
+    "Date Rptd": "Date Reported",
+    "DATE OCC": "Date Occurrence",
+    "TIME OCC": "Time Occurred",
+    "AREA": "Area Code",
+    "AREA NAME": "Area Name",
+    "Crm Cd": "Crime Code",
+    "Crm Cd Desc": "Crime Code Description",
+    "Vict Age": "Victim Age",
+    "Vict Sex": "Victim Sex",
+    "Vict Descent": "Victim Descent",
+    "Premis Cd": "Premise Code",
+    "Premis Desc": "Premise Description",
+    "Weapon Used Cd": "Weapon Code",
+    "Weapon Desc": "Weapon Description",
+    "Status": "Status",
+    "Status Desc": "Status Description",
+    "LOCATION": "Location",
+    "Cross Street": "Cross Street",
+    "LAT": "Latitude",
+    "LON": "Longitude"
+}
+df = df.rename(columns=rename)
+victim_descent_mapping = {
+    "A": "Other Asian",
+    "B": "Black",
+    "C": "Chinese",
+    "D": "Cambodian",
+    "F": "Filipino",
+    "G": "Guamanian",
+    "H": "Hispanic/Latin/Mexican",
+    "I": "American Indian/Alaskan Native",
+    "J": "Japanese",
+    "K": "Korean",
+    "L": "Laotian",
+    "O": "Other",
+    "P": "Pacific Islander",
+    "S": "Samoan",
+    "U": "Hawaiian",
+    "V": "Vietnamese",
+    "W": "White",
+    "X": "Unknown",
+    "Z": "Asian Indian"
+}
+df['Victim Descent Code'] = df['Victim Descent']
+df['Victim Descent'] = df['Victim Descent'].map(victim_descent_mapping)
+df["Date Occurrence"] = pd.to_datetime(df["Date Occurrence"], format='%m/%d/%Y %I:%M:%S %p')
+df["Year Occurrence"] = df["Date Occurrence"].dt.year
+df["Month Occurrence"] = df["Date Occurrence"].dt.month
+df["Day Occurrence"] = df["Date Occurrence"].dt.day
+df["Date Occurrence"] = df["Date Occurrence"].dt.date
+df["Year-Month"] = df["Year Occurrence"].astype(str) + "-" + df["Month Occurrence"].astype(str)
+df["Date Reported"] = pd.to_datetime(df["Date Reported"], format='%m/%d/%Y %I:%M:%S %p')
+df["Date Reported"] = df["Date Reported"].dt.date
+
+
+occurrence = df.groupby(["Year Occurrence", "Month Occurrence"]).size()
+occurrence = occurrence.reset_index(name="No. of Occurrences")
+occurrence["Year-Month"] = occurrence["Year Occurrence"].astype(str) + "-" + occurrence["Month Occurrence"].astype(str)
+occurrence = occurrence.iloc[:-1]
+
+fig = go.Figure(data=go.Scatter(x=occurrence["Year-Month"], y=occurrence["No. of Occurrences"], mode='lines+markers'))
+fig.update_layout(
+    title='Crime Occurrences [2020-2024]',
+    xaxis=dict(title='Year-Month'),
+    yaxis=dict(title='No. of Occurrences'),
+    xaxis_tickangle=-45,
+    showlegend=False
 )
-ax.plot(theta, r)
-ax.set_rticks([0.5, 1, 1.5, 2])
-ax.grid(True)
-plt.show()
+fig.show()
 ```
 
-Here's an example of citing a source [see @phil99, pp. 33-35]. Be sure the source information is entered in "BibTeX" form in the `references.bib` file.
+As it can been seen in @fig-1, from the beginning of 2021, there's been a rise in crime incidents, hitting a peak in May 2022. Since then, they've been slowly going down but still much higher than the period prior to July 2021.
+
+Lets look at the demographics behind the crimes reported.
+
+```{python echo=FALSE}
+#| label: fig-2
+#| fig-cap: "Crime Occurrences Over Time Based on Victims' Ethnic Descent"
+time_series_status = df.groupby(['Date Reported', 'Victim Descent']).size().reset_index(name='counts')
+top_10_descent = time_series_status.groupby('Victim Descent')['counts'].sum().nlargest(10)
+top_10_descent_sorted = top_10_descent.sort_values(ascending=False).index
+time_series_status_top10 = time_series_status[time_series_status['Victim Descent'].isin(top_10_descent_sorted)]
+
+fig = px.line(time_series_status_top10, x='Date Reported', y='counts', color='Victim Descent', title='Crime Reports by Victim Status')
+fig.update_xaxes(title_text='Date')
+fig.update_yaxes(title_text='Number of Crimes Reported')
+fig.update_layout(height=600, width=1000)
+fig.show()
+```
+
+The demographic profile of crime victims reveals a notable trend, with individuals of Hispanic, Latino, or Mexican descent constituting a significant proportion, surpassing victims from other ethnic backgrounds. Following closely behind are victims of White and Black ethnicity. Interestingly, there have been instances where the gap between Hispanic/Latino victims and White victims narrowed, notably around March 2020, January 2021, and January 2023. However, throughout most periods, victims of Hispanic/Latino origin outnumbered those of other ethnicities. Analyzing these patterns offers valuable insights into the dynamics of crime and underscores the importance of targeted interventions and policies to address the needs of affected communities.
+
+```{python echo=FALSE}
+#| label: fig-3
+#| fig-cap: "Sex Distributions of Victims"
+
+filtered_df = df[df['Victim Sex'].isin(['M', 'F', 'X'])]
+filtered_df['Victim Sex'] = filtered_df['Victim Sex'].replace({'M': 'Male', 'F': 'Female', 'X': 'Unknown'})
+sex_counts = filtered_df['Victim Sex'].value_counts().head(10)
+fig = px.pie(values=sex_counts, names=sex_counts.index, title='Distribution of Victim Sex')
+fig.show()
+```
+
+```{python echo=FALSE}
+#| label: fig-4
+#| fig-cap: "Age Distributions of Victims"
+
+df_filtered = filtered_df[filtered_df['Victim Age'] > 0]
+fig = px.histogram(df_filtered, x='Victim Age', title='Distribution of Victim Age', nbins=20)
+fig.update_layout(xaxis_title='Age', yaxis_title='Count')
+fig.show()
+```
+
+Most of the victims were male, accounting for 47.3%, followed by females at 42.2%. The gender of 10.5% of the victims was not known.
+
+From @fig-4, we can see that a significant proportion of victims fell within the 25 to 35 age range. The distribution graph displays a right skew, indicating that while the majority of victims are within this age bracket, there are fewer victims in older age groups, with a few outliers skewing towards older ages.
+
+Moving from the demographics of the victims to the geographical aspect of the crimes - what are the regions in LA that have the most number of crimes reported?
+
+```{python echo=FALSE}
+#| label: fig-5
+#| fig-cap: "Safest Areas in LA"
+
+district_crime_counts = df.groupby('Area Code').agg(
+    Latitude=('Latitude', 'mean'), Longitude=('Longitude', 'mean'), counts=('Area Code', 'size'), 
+    Area_Name=('Area Name', 'first')
+).reset_index()
+
+fig = px.scatter_mapbox(district_crime_counts,
+                        lat="Latitude",
+                        lon="Longitude",
+                        size="counts",
+                        color="counts",
+                        hover_name="Area Code",
+                        color_continuous_scale="jet",
+                        hover_data=["Area Code", "Area_Name", "counts", "Latitude", "Longitude"],
+                        zoom=9,
+                        height=750, width=1_200,
+                        title="Crime Counts by Area")
+fig.update_layout(mapbox_style="open-street-map")
+fig.show()
+```
 
 
-The bibliography will automatically get generated. Any sources you cite in the document will be included. Other entries in the `.bib` file will not be included.
+It can be seen in @fig-5 that the Central LA topped the charts with the highest number of reported crimes over four years, totaling 61,416 incidents. Following closely were the 77th Street and Pacific Districts, all fairly clustered together on the map. These areas likely experience higher crime rates due to their higher population densities. On the other hand, the Northern Districts of LA, such as Foothill, Devonshire, and Mission, seem to be the safest regions.
+
+Here is the breakdown of all the regions based on crimes reported. Good to know if you or your friends or family live in LA.
+
+```{python echo=FALSE}
+#| label: fig-6
+#| fig-cap: "Crime Reports based on Area"
+
+value_counts = df["Area Name"].value_counts()
+sorted_counts = value_counts.sort_values(ascending=False)
+
+fig = go.Figure(data=go.Bar(x=sorted_counts.index, y=sorted_counts.values))
+fig.update_layout(title='Crime Counts by Area', xaxis_title='Area Name', xaxis=dict(tickangle=45), yaxis_title='Frequency', title_x=0.5)
+
+fig.show()
+```
+
+This brings us to ask what are the statuses of the crimes reported?
+
+```{python echo=FALSE}
+#| label: fig-7
+#| fig-cap: "Status of Reported Crimes"
+value_counts = df["Area Name"].value_counts()
+sorted_counts = value_counts.sort_values(ascending=False)
+fig = go.Figure([go.Bar(x=sorted_counts.index, y=sorted_counts.values)])
+fig.update_layout(title_text='Frequency of Area Names',
+                  xaxis_title='Area Name',
+                  yaxis_title='Frequency')
+fig.show()
+```
+
+
+A significant number of crimes reported between 2020 and 2024 are still being investigated, as indicated in @fig-8, with only a small proportion resulting in arrests or other conclusive legal measures.
+
+## Prediction with Machine Learning
+
+The efficiency of machine learning models in predicting victim age based on various factors from crime reports was assessed. Factors included victim demographics such as sex and descent, crime location including latitude and longitude, and crime type. Three common regression models—Linear Regression, Ridge Regression, and Lasso Regression—were employed for analysis. Additionally, a classification model suitable for regression tasks-Decision Trees- was utilized in the prediction.
+
+```{python echo=FALSE}
+#| label: fig-8
+#| fig-cap: "R2 scores of Machine Learning Models"
+
+df_new = df.copy()
+
+victim_encoder = LabelEncoder()
+status_encoder = LabelEncoder()
+location_encoder = LabelEncoder()
+victim_sex_encoder = LabelEncoder()
+victim_descent_code_encoder = LabelEncoder()
+
+
+df_new['Victim Descent'] = victim_encoder.fit_transform(df_new['Victim Descent'])
+df_new['Status'] = status_encoder.fit_transform(df_new['Status'])
+df_new['Location'] = location_encoder.fit_transform(df_new['Location'])
+df_new['Victim Sex'] = victim_sex_encoder.fit_transform(df_new['Victim Sex'])
+df_new['Victim Descent Code'] = victim_descent_code_encoder.fit_transform(df_new['Victim Descent Code'])
+
+
+
+X = df_new.drop(columns=['Victim Age', 'Date Reported', 'Date Occurrence', 'Time Occurred', 'Area Name',
+                      'Crime Code Description', 'Premise Code', 'Premise Description', 'Weapon Description', 'Status Description', 'Cross Street', 'Victim Descent',
+                      'Year-Month', 'Cross Street', 'Mocodes', 'Crm Cd 1', 'Crm Cd 2', 'Crm Cd 3', 'Crm Cd 4', 'Weapon Code', 'Year Occurrence', 'Month Occurrence',
+                       'Day Occurrence', 'Report No.', 'Time Occurred', 'Rpt Dist No' ])
+y = df_new['Victim Age']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+models = {
+    'Linear Regression': LinearRegression(),
+    'Decision Tree': DecisionTreeClassifier(max_depth=500),
+    'Ridge Regression': Ridge(),
+    'Lasso Regression': Lasso(),
+}
+
+
+r2_scores = {}
+
+for name, model in models.items():
+    model.fit(X_train_scaled, y_train)
+    y_pred = model.predict(X_test_scaled)
+    r2 = r2_score(y_test, y_pred)
+    r2_scores[name] = r2
+
+sorted_models = sorted(r2_scores.items(), key=lambda x: x[1])
+
+fig = go.Figure(data=[go.Bar(x=[x[0] for x in sorted_models], y=[x[1] for x in sorted_models])])
+fig.update_layout(
+    title="R2-scores of Different Machine Learning Models",
+    xaxis_title="Machine Learning Models",
+    yaxis_title="R2-scores",
+    xaxis=dict(tickangle=45),
+    yaxis=dict(range=[0, 0.5])
+)
+fig.show()
+```
+
+Linear and Ridge Regression models demonstrate the highest efficiency, achieving an R2-score of 0.33, closely followed by Lasso Regression and Decision Trees with R2-scores of 0.32 and 0.28 respectively. However, these models still fall short as they only account for a maximum of 33% of the variability in age. To improve efficiency, feature engineering could involve incorporating descriptive values such as crime code descriptions and crime premise and refining predictor variables by eliminating those correlated with age. Moreover, employing advanced machine learning models like Random Forest and Extra Trees classifier could potentially yield better predictability of age.
+
+
+## References
+
+Los Angeles Crime Data from 2020 to Present: https://data.lacity.org/Public-Safety/Crime-Data-from-2020-to-Present/2nrs-mtv8/about_data
