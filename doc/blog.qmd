@@ -132,7 +132,7 @@ top_10_descent = time_series_status.groupby('Victim Descent')['counts'].sum().nl
 top_10_descent_sorted = top_10_descent.sort_values(ascending=False).index
 time_series_status_top10 = time_series_status[time_series_status['Victim Descent'].isin(top_10_descent_sorted)]
 
-fig = px.line(time_series_status_top10, x='Date Reported', y='counts', color='Victim Descent', title='Crime Reports by Victim Status')
+fig = px.line(time_series_status_top10, x='Date Reported', y='counts', color='Victim Descent', title='Crime Reports by Victims\' Ethnic Descent')
 fig.update_xaxes(title_text='Date')
 fig.update_yaxes(title_text='Number of Crimes Reported')
 fig.update_layout(height=600, width=1000)
@@ -215,13 +215,20 @@ This brings us to ask what are the statuses of the crimes reported?
 ```{python echo=FALSE}
 #| label: fig-7
 #| fig-cap: "Status of Reported Crimes"
-value_counts = df["Area Name"].value_counts()
-sorted_counts = value_counts.sort_values(ascending=False)
-fig = go.Figure([go.Bar(x=sorted_counts.index, y=sorted_counts.values)])
-fig.update_layout(title_text='Frequency of Area Names',
-                  xaxis_title='Area Name',
-                  yaxis_title='Frequency')
+grouped = df.groupby(['Year Occurrence', 'Status Description']).size().unstack(fill_value=0)
+grouped_reset = grouped.reset_index()
+
+fig = go.Figure()
+for status in grouped_reset.columns[1:]:
+    fig.add_trace(go.Bar(x=grouped_reset['Year Occurrence'], y=grouped_reset[status], name=status))
+
+fig.update_layout(title='Crime Occurrences by Year and Status',
+                  xaxis_title='Year',
+                  yaxis_title='No. of Crimes Reported',
+                  xaxis=dict(tickangle=45),
+                  barmode='stack')
 fig.show()
+
 ```
 
 
